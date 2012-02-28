@@ -41,9 +41,9 @@ protected[meta] class FloatProperty   extends BaseProperty(0f)
 protected[meta] class DoubleProperty  extends BaseProperty(0d)
 protected[meta] class StringProperty  extends BaseProperty("")
 protected[meta] class KeyProperty     extends BaseProperty[Key](
-  error("No suitable default value!"))
+  sys.error("No suitable default value!"))
 protected[meta] class BlobKeyProperty extends BaseProperty[BlobKey](
-  error("No suitable default value!"))
+  sys.error("No suitable default value!"))
 
 protected[meta] class DateProperty     extends BaseProperty(new java.util.Date)
 protected[meta] class DateTimeProperty extends Property[org.joda.time.DateTime] {

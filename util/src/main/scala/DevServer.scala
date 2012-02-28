@@ -58,7 +58,7 @@ object DevServer {
   }
 
   def apply(
-    sdkHome: String   = sdk.getOrElse(error("Environment variable APPENGINE_SDK_HOME not set!")),
+    sdkHome: String   = sdk.getOrElse(sys.error("Environment variable APPENGINE_SDK_HOME not set!")),
     javaHome: String  = javaBin,
     port: Int         = Port.any) =
     new DevServer(sdkHome, javaHome, port)

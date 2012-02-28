@@ -30,22 +30,23 @@ object HighchairBuild extends Build {
 }
 
 object GAE {
-  val gae_version = "1.5.0"
+  val gae_version = "1.6.2.1"
   val group = "com.google.appengine"
 
-  def artifiact(id: String) = group % id % gae_version % "provided"
+  def artifact(id: String) = group % id % gae_version % "provided"
 
-  val sdk     = artifiact("appengine-api-1.0-sdk")
-  val stubs   = artifiact("appengine-api-stubs")
-  val test    = artifiact("appengine-testing")
-  val labsApi = artifiact("appengine-api-labs")
+  val sdk     = artifact("appengine-api-1.0-sdk")
+  val remote  = artifact("appengine-remote-api")
+  val stubs   = artifact("appengine-api-stubs")
+  val test    = artifact("appengine-testing")
+  val labsApi = artifact("appengine-api-labs")
 
-  val dependencies = Seq(sdk, stubs, test, labsApi)
+  val dependencies = Seq(sdk, remote, stubs, test, labsApi)
 }
 
 object Common {
 
-  val dispatch_version = "0.8.1"
+  val dispatch_version = "0.8.7"
 
   def dispatchDep(cfg: String) =
     "net.databinder" %% "dispatch-http" % dispatch_version % cfg
@@ -53,23 +54,20 @@ object Common {
   def specsDep(sv: String)(cfg: String) =
     sv.substring(0, 3) match {
       case "2.8" => "org.scala-tools.testing" % "specs_2.8.1" % "1.6.8" % cfg
-      case "2.9" => "org.scala-tools.testing" %% "specs" % "1.6.8" % cfg
+      case "2.9" => "org.scala-tools.testing" %% "specs" % "1.6.9" % cfg
       case _ => error("unsupported")
     }
-
-  def specs2Dep(cfg: String) = Seq(
-    "org.specs2" %% "specs2" % "1.5" % cfg,
-    "org.specs2" %% "specs2-scalaz-core" % "5.1-SNAPSHOT" % cfg)
 
   val settings = Defaults.defaultSettings ++ Seq(
     organization := "net.thegodcode",
     name := "Highchair",
     version := "0.0.5-SNAPSHOT",
-    scalaVersion := "2.8.1",
+    scalaVersion := "2.9.1",
     crossScalaVersions := Seq("2.8.1", "2.9.0-1"),
     scalacOptions += "-deprecation",
-    libraryDependencies <<= scalaVersion(
-      v => GAE.dependencies ++ specs2Dep("test") :+ specsDep(v)("test")),
+    libraryDependencies ++= GAE.dependencies ++ Seq(
+      "org.specs2" %% "specs2" % "1.8.2" % "test"),
+    libraryDependencies <+= scalaVersion(v => specsDep(v)("test")),
     parallelExecution in Test := false,
     resolvers := Seq(ScalaToolsSnapshots),
     publishTo <<= (version) { version: String =>

@@ -57,7 +57,7 @@ case class Query[E <: Entity[E], K <: Kind[E]](
     asIterable(dss.prepare(q).asIterable) map (_ getKey)
   }
   /** Fetch entities matching this query, optionally providing limits and/or offsets. */
-  @deprecated(message = "since 0.0.5")
+  @deprecated(message="Use limit(l) and offset(o)", since = "since 0.0.5")
   // TODO better default; clean up; what happens when offset extends the bounds?
   def fetch(limit: Int = 500, skip: Int = 0)(implicit dss: DatastoreService) = {
     val opts = FetchOptions.Builder withOffset(skip) limit(limit)

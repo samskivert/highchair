@@ -75,7 +75,7 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
   implicit def autoToPropertyMapping[A](am: AutoMapping[E, A]) =
     identityIdx.get(am)
       .map(_.asInstanceOf[PropertyMapping[E, A]])
-      .getOrElse(error("No mapping found!"))
+      .getOrElse(sys.error("No mapping found!"))
 
   private def findConstructor =
     reflector.findConstructor { c =>
@@ -83,7 +83,7 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
       val g_types = c.getGenericParameterTypes.toList
       p_types.containsSlice(ctorTag) &&
       findKey(p_types.zip(g_types)).isDefined
-    } getOrElse error("No suitable constructor could be found!")
+    } getOrElse sys.error("No suitable constructor could be found!")
 
   private def findKey(types: Seq[(Class[_], java.lang.reflect.Type)]) =
     types.find {
