@@ -13,17 +13,18 @@ import com.google.appengine.api.datastore.{
 abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
   extends PropertyImplicits {
 
-  val reflector = new poso.Reflector[E]
-  val name = reflector.simpleName
+  private val reflector = new poso.Reflector[E]
   private lazy val ctor = findConstructor
 
-  def keyFor(id: Long) = KeyFactory.createKey(name, id)
+  val name = reflector.simpleName
+
+  def keyFor(id: Long) :Key = KeyFactory.createKey(name, id)
 
   def childOf(ancestor: Key): Key = new GEntity(name, ancestor).getKey
 
   private def entityKey(e: E) = e.key //TODO generalize
 
-  def put(e: E)(implicit dss: DatastoreService) = {
+  def put(e: E)(implicit dss: DatastoreService) :E = {
     val entity = entityKey(e).map(new GEntity(_)).getOrElse(new GEntity(name))
 
     val key = dss.put(identityIdx.foldLeft(entity) {
@@ -46,11 +47,11 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
     }
 
   /**/
-  def where[A](f: this.type => meta.Filter[E, A]) =
-    Query[E, this.type](this, f(this) :: Nil)
+  def where[A](f: this.type => meta.Filter[E, A]) :Query[E, this.type] =
+    QueryImpl[E, this.type](this, f(this) :: Nil)
 
-  implicit def kind2Query[K <: Kind[E]](k: K) =
-    Query[E, this.type](this)
+  implicit def kind2Query[K <: Kind[E]](k: K) :Query[E, this.type] =
+    QueryImpl[E, this.type](this)
   /**/
 
   private def putProperty[A : Manifest](pm: PropertyMapping[E, _], e: E, ge: GEntity) = {
@@ -58,7 +59,7 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
     pm.prop.asInstanceOf[Property[A]].set(ge, pm.name, a)
   }
 
-  def entity2Object(e: GEntity) = {
+  private[highchair] def entity2Object(e: GEntity) = {
     val args = Some(e.getKey) :: (ctorMappings map {
       case pm => pm.prop.get(e, pm.name)
     }).toList.asInstanceOf[List[java.lang.Object]]
@@ -66,13 +67,13 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
   }
 
   /* Function which, given a type A, will yield an appropriate Property instance via an implicit. */
-  def property[A](name: String)(implicit p: Property[A], m: Manifest[A]) =
+  protected def property[A](name: String)(implicit p: Property[A], m: Manifest[A]) =
     new AutoMapping[E, A](this, p, m.erasure, Some(name))
 
-  def property[A](implicit p: Property[A], m: Manifest[A]) =
+  protected def property[A](implicit p: Property[A], m: Manifest[A]) =
     new AutoMapping[E, A](this, p, m.erasure)
 
-  implicit def autoToPropertyMapping[A](am: AutoMapping[E, A]) =
+  implicit def autoToPropertyMapping[A](am: AutoMapping[E, A]) :PropertyMapping[E, A] =
     identityIdx.get(am)
       .map(_.asInstanceOf[PropertyMapping[E, A]])
       .getOrElse(sys.error("No mapping found!"))

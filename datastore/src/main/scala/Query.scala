@@ -1,32 +1,57 @@
 package highchair.datastore
 
 import meta._
-import collection.JavaConversions.asIterable
+import collection.JavaConversions.iterableAsScalaIterable
 import com.google.appengine.api.datastore.{
   DatastoreService,
+  Entity => GEntity,
   FetchOptions,
+  Key,
   Query => GQuery
 }
 
-case class Query[E <: Entity[E], K <: Kind[E]](
+trait Query[E <: Entity[E], K <: Kind[E]] {
+  /** Add a filter. */
+  def and(f: K => Filter[E, _]) :Query[E, K]
+
+  /** Set a limit on the number of entities to fetch. */
+  def limit(l: Int) :Query[E, K]
+  /** Set on offset in the set of fetched entites to return. */
+  def offset(o: Int) :Query[E, K]
+  def updateFetch(f: Fetch => Fetch) :Query[E, K]
+
+  /** Sort ascending on some property. TODO moar types */
+  def orderAsc(f: K => PropertyMapping[E, _]) :Query[E, K]
+  /** Sort descending on some property. TODO moar types */
+  def orderDesc(f: K => PropertyMapping[E, _]) :Query[E, K]
+
+  /** Fetch a single record matching this query. */
+  def fetchOne()(implicit dss: DatastoreService) :Option[E]
+  /** Fetch only the keys of entities matching this query. More efficient. */
+  def fetchKeys()(implicit dss: DatastoreService) :Iterable[Key]
+  /** Fetch entities matching this query, optionally providing limits and/or offsets. */
+  @deprecated(message="Use limit(l) and offset(o)", since = "since 0.0.5")
+  def fetch(limit: Int = 500, skip: Int = 0)(implicit dss: DatastoreService) :Iterable[E]
+  /** Fetch entities matching this query. */
+  def fetch()(implicit dss: DatastoreService) :Iterable[E]
+}
+
+private[highchair] case class QueryImpl[E <: Entity[E], K <: Kind[E]](
   kind:         K,
   filters:      List[Filter[E, _]] = Nil,
   sorts:        List[Sort[E, _]] = Nil,
-  fetchOptions: Option[Fetch] = None) {
+  fetchOptions: Option[Fetch] = None) extends Query[E, K] {
 
   def baseQuery = new GQuery(kind.name)
-  /** Construct a native datastore query. */
+  /** Constructs a native datastore query. */
   def rawQuery =
     (baseQuery /: (filters ::: sorts)) { (q, f) => f bind q }
 
-  /** Add a filter. */
   def and(f: K => Filter[E, _]) =
     copy(filters = f(kind) :: filters)
 
-  /** Set a limit on the number of entities to fetch. */
   def limit(l: Int) =
     updateFetch(_.copy(limit = l))
-  /** Set on offset in the set of fetched entites to return. */
   def offset(o: Int) =
     updateFetch(_.copy(skip = o))
   def updateFetch(f: Fetch => Fetch) =
@@ -41,36 +66,29 @@ case class Query[E <: Entity[E], K <: Kind[E]](
 
   val initFetch = init(fetchOptions)(Fetch())_
 
-  /** Sort ascending on some property. TODO moar types */
   def orderAsc(f: K => PropertyMapping[E, _]) =
     copy(sorts = Asc(f(kind)) :: sorts)
-  /** Sort descending on some property. TODO moar types */
   def orderDesc(f: K => PropertyMapping[E, _]) =
     copy(sorts = Desc(f(kind)) :: sorts)
 
-  /** Fetch a single record matching this query. */
   def fetchOne()(implicit dss: DatastoreService) =
     limit (1) fetch() headOption
-  /** Fetch only the keys of entities matching this query. More efficient. */
   def fetchKeys()(implicit dss: DatastoreService) = {
     val q = rawQuery setKeysOnly()
-    asIterable(dss.prepare(q).asIterable) map (_ getKey)
+    (dss.prepare(q).asIterable :Iterable[GEntity]) map(_ getKey)
   }
-  /** Fetch entities matching this query, optionally providing limits and/or offsets. */
-  @deprecated(message="Use limit(l) and offset(o)", since = "since 0.0.5")
   // TODO better default; clean up; what happens when offset extends the bounds?
-  def fetch(limit: Int = 500, skip: Int = 0)(implicit dss: DatastoreService) = {
+  def fetch(limit: Int = 500, skip: Int = 0)(implicit dss: DatastoreService) :Iterable[E] = {
     val opts = FetchOptions.Builder withOffset(skip) limit(limit)
-    asIterable(dss.prepare(rawQuery).asIterable(opts)) map kind.entity2Object
+    (dss.prepare(rawQuery).asIterable(opts) :Iterable[GEntity]) map kind.entity2Object
   }
-  /** Fetch entities matching this query. */
   def fetch()(implicit dss: DatastoreService) = {
     val pq = dss.prepare(rawQuery)
-    val iterable = fetchOptions match {
+    val iterable :Iterable[GEntity] = fetchOptions match {
       case Some(opts) => pq.asIterable(opts.fetchOptions)
       case None => pq.asIterable()
     }
-    asIterable(iterable).map(kind.entity2Object)
+    iterable map(kind.entity2Object)
   }
 
   override def toString =
