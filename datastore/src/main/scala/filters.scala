@@ -14,7 +14,7 @@ sealed trait Filter[E, A] {
 }
 
 private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E, A] =>
-  
+
   def single(filter: FO, sym: String, value: A) = new Filter[E, A] {
     def bind(q: GQuery) =
       q.addFilter(name, filter, prop.toStoredType(value))
@@ -22,7 +22,7 @@ private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E,
     override def toString =
       "%s %s %s".format(PropertyFilter.this.name, sym, value)
   }
-  
+
   def multi(filter: FO, sym: String, values: A*) = new Filter[E, A] {
     def bind(q: GQuery) = {
       val list = new java.util.ArrayList[Any]
@@ -33,7 +33,7 @@ private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E,
     override def toString =
       "%s %s (%s)".format(PropertyFilter.this.name, sym, values.mkString(","))
   }
-  
+
   /* Filter operations. */
   def === (value: A)  = single(FO.EQUAL, "=", value)
   def is  (value: A)  = ===(value)
@@ -54,5 +54,7 @@ sealed abstract class Sort[E <: Entity[E], A](val p: PropertyMapping[E, A], val 
     "ORDER BY " + p.name + " " +
       (if (direction == SD.ASCENDING) "ASC" else "DESC")
 }
-case class Asc[E <: Entity[E], A](property: PropertyMapping[E, A]) extends Sort(property, SD.ASCENDING)
-case class Desc[E <: Entity[E], A](property: PropertyMapping[E, A]) extends Sort(property, SD.DESCENDING)
+case class Asc[E <: Entity[E], A](property: PropertyMapping[E, A])
+     extends Sort(property, SD.ASCENDING)
+case class Desc[E <: Entity[E], A](property: PropertyMapping[E, A])
+     extends Sort(property, SD.DESCENDING)

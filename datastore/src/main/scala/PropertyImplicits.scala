@@ -16,7 +16,7 @@ trait PropertyImplicits {
 
   implicit def type2option[A](implicit property: Property[A]): OptionalProperty[A] =
     new OptionalProperty(property)
-    
+
   implicit def type2list[A](implicit property: Property[A]): ListProperty[A] =
     new ListProperty(property)
 }

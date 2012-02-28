@@ -13,9 +13,9 @@ class FutureF[A, B](val jf: Future[A], f: A => B = identity[A] _) {
    */
   def get(): Either[Throwable, B] =
     catching(classOf[Exception]) either(f(jf.get()))
-  
+
   def map[C](g: B => C) = new FutureF[A, C](jf, f andThen g)
-  
+
   override def toString = "<future functor>"
 }
 

@@ -22,7 +22,7 @@ object Person extends Kind[Person] with Async[Person] {
   val age         = property[Int]
   val birthday    = property[Date]
   val aliases     = property[List[String]]
-  
+
   /* Test set. */
   val testSet = List(
     Person(None, "Erin", Some("Pate"), "Lewis", 31, new Date, Nil),

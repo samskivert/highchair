@@ -9,7 +9,7 @@ class KeysOnlySpec extends highchair.specs.DataStoreSpec {
     super.doBeforeSpec()
     Person.testSet foreach Person.put
   }
-  
+
   "Keys-only query should fetch keys, only" in {
     (Person where(_.lastName is "Lewis") fetchKeys() headOption)
       .map(_.getClass.getSimpleName) must_== Some("Key")

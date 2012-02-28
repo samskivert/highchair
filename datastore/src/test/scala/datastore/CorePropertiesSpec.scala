@@ -6,10 +6,10 @@ import org.joda.time.DateTime
 import com.google.appengine.api.datastore.Text
 
 class CorePropertiesSpec extends Specification with PropertyImplicits {
-  
+
   def equiv[A, B](p: Property[A], a: A, b: B) =
     p.toStoredType(a) == b && p.fromStoredType(b) == a
-  
+
   "Core properties" should {
     "map Boolean to and from java.lang.Boolean" in {
       equiv(booleanProperty, true, java.lang.Boolean.TRUE)

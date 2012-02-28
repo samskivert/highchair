@@ -13,16 +13,16 @@ case class Query[E <: Entity[E], K <: Kind[E]](
   filters:      List[Filter[E, _]] = Nil,
   sorts:        List[Sort[E, _]] = Nil,
   fetchOptions: Option[Fetch] = None) {
-  
+
   def baseQuery = new GQuery(kind.name)
   /** Construct a native datastore query. */
-  def rawQuery = 
+  def rawQuery =
     (baseQuery /: (filters ::: sorts)) { (q, f) => f bind q }
-  
+
   /** Add a filter. */
   def and(f: K => Filter[E, _]) =
     copy(filters = f(kind) :: filters)
-  
+
   /** Set a limit on the number of entities to fetch. */
   def limit(l: Int) =
     updateFetch(_.copy(limit = l))
@@ -31,25 +31,25 @@ case class Query[E <: Entity[E], K <: Kind[E]](
     updateFetch(_.copy(skip = o))
   def updateFetch(f: Fetch => Fetch) =
     copy(fetchOptions = initFetch(f))
-  
+
   // clearly this is general..
   def init[A](init: Option[A])(zero: => A)(f: A => A) =
     (init match {
       case None         => Some(zero)
       case p @ Some(_)  => p
     }) map f
-  
+
   val initFetch = init(fetchOptions)(Fetch())_
-  
+
   /** Sort ascending on some property. TODO moar types */
   def orderAsc(f: K => PropertyMapping[E, _]) =
     copy(sorts = Asc(f(kind)) :: sorts)
   /** Sort descending on some property. TODO moar types */
   def orderDesc(f: K => PropertyMapping[E, _]) =
     copy(sorts = Desc(f(kind)) :: sorts)
-  
+
   /** Fetch a single record matching this query. */
-  def fetchOne()(implicit dss: DatastoreService) = 
+  def fetchOne()(implicit dss: DatastoreService) =
     limit (1) fetch() headOption
   /** Fetch only the keys of entities matching this query. More efficient. */
   def fetchKeys()(implicit dss: DatastoreService) = {
@@ -63,6 +63,7 @@ case class Query[E <: Entity[E], K <: Kind[E]](
     val opts = FetchOptions.Builder withOffset(skip) limit(limit)
     asIterable(dss.prepare(rawQuery).asIterable(opts)) map kind.entity2Object
   }
+  /** Fetch entities matching this query. */
   def fetch()(implicit dss: DatastoreService) = {
     val pq = dss.prepare(rawQuery)
     val iterable = fetchOptions match {
@@ -71,7 +72,7 @@ case class Query[E <: Entity[E], K <: Kind[E]](
     }
     asIterable(iterable).map(kind.entity2Object)
   }
-    
+
   override def toString =
     "SELECT * FROM " + kind.name + " WHERE " +
       filters.reverse.mkString(" AND ") +

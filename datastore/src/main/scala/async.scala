@@ -7,7 +7,8 @@ import com.google.appengine.api.datastore.{
 }
 
 /**
- * Support for executing non-blocking queries through the datastore's [[http://code.google.com/appengine/docs/java/datastore/async.html asynchrnonous API]].
+ * Support for executing non-blocking queries through the datastore's
+ * [[http://code.google.com/appengine/docs/java/datastore/async.html asynchrnonous API]].
  * The asynchronous API enables high-performance parallel execution of queries.
  */
 class AsyncKind[E <: Entity[E]](k: Kind[E]) {
@@ -29,6 +30,7 @@ trait Async[E <: Entity[E]] { this: Kind[E] =>
 class AsyncKindWrapper[E <: Entity[E]](k: Kind[E]) {
   val async = new AsyncKind(k)
 }
+
 object Async {
   def apply[E <: Entity[E]](k: Kind[E]) = new AsyncKindWrapper(k)
   implicit def kindToAsync[E <: Entity[E]](k: Kind[E]) = Async(k)

@@ -6,17 +6,17 @@ import org.joda.time.DateTime
 import com.google.appengine.api.datastore.Text
 
 class NoteSpec extends highchair.specs.DataStoreSpec {
-  
+
   val notes = List(
     Note(None, "A short note", new Text("This is a very short note."), new DateTime()),
     Note(None, "A long note", new Text("This note can be up to a meg in size!"), new DateTime())
   )
-  
+
   doBeforeSpec {
     super.doBeforeSpec()
     notes foreach Note.put
   }
- 
+
   "Note queries" should {
     "Find both notes" in {
       (Note where(_.title in ("A short note", "A long note")) fetch() size) must_== 2
