@@ -68,7 +68,7 @@ protected[meta] class ListProperty[A](val wrapped: Property[A])
                 extends BaseProperty[List[A]](Nil) {
   override def toStoredType(value: List[A]) = value match {
     case Nil => null
-    case xs => scala.collection.JavaConversions.asList(xs)
+    case xs => collection.JavaConversions.seqAsJavaList(xs)
   }
 
   override def fromStoredType(st: Any) = st match {
