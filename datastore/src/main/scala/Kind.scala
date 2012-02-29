@@ -20,6 +20,12 @@ abstract class Kind[E <: Entity[E]](implicit m: Manifest[E])
 
   def keyFor(id: Long) :Key = KeyFactory.createKey(name, id)
 
+  def keyFor(id: String) :Key = KeyFactory.createKey(name, id)
+
+  def keyFor(parent :Key, id: Long) :Key = KeyFactory.createKey(parent, name, id)
+
+  def keyFor(parent :Key, id: String) :Key = KeyFactory.createKey(parent, name, id)
+
   def childOf(ancestor: Key): Key = new GEntity(name, ancestor).getKey
 
   private def entityKey(e: E) = e.key //TODO generalize
