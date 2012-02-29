@@ -2,6 +2,7 @@ package highchair.datastore.meta
 
 import highchair.datastore.Entity
 import com.google.appengine.api.datastore.{
+  Key,
   Query => GQuery
 }
 import GQuery.{
@@ -11,6 +12,10 @@ import GQuery.{
 
 sealed trait Filter[E, A] {
   def bind(q: GQuery): GQuery
+}
+
+private[datastore] class AncestorFilter[E](key :Key) extends Filter[E, AnyRef] {
+  def bind(q: GQuery) = q.setAncestor(key)
 }
 
 private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E, A] =>

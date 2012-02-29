@@ -14,6 +14,9 @@ trait Query[E <: Entity[E], K <: Kind[E]] {
   /** Add a filter. */
   def and(f: K => Filter[E, _]) :Query[E, K]
 
+  /** Restricts results to entities with the specified ancestor. */
+  def ancestor(key :Key) :Query[E, K]
+
   /** Set a limit on the number of entities to fetch. */
   def limit(l: Int) :Query[E, K]
   /** Set on offset in the set of fetched entites to return. */
@@ -49,6 +52,9 @@ private[highchair] case class QueryImpl[E <: Entity[E], K <: Kind[E]](
 
   def and(f: K => Filter[E, _]) =
     copy(filters = f(kind) :: filters)
+
+  def ancestor(key :Key) =
+    copy(filters = new AncestorFilter[E](key) :: filters)
 
   def limit(l: Int) =
     updateFetch(_.copy(limit = l))
