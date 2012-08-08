@@ -28,10 +28,10 @@ private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E,
       "%s %s %s".format(PropertyFilter.this.name, sym, value)
   }
 
-  def multi(filter: FO, sym: String, values: A*) = new Filter[E, A] {
+  def multi(filter: FO, sym: String, values: Traversable[A]) = new Filter[E, A] {
     def bind(q: GQuery) = {
       val list = new java.util.ArrayList[Any]
-      values foreach list.add
+      values map(prop.toStoredType) foreach list.add
       q.addFilter(name, filter, list)
     }
     /* Produce a query fragment for the string representation. */
@@ -48,7 +48,7 @@ private[meta] trait PropertyFilter[E <: Entity[E], A] { this: PropertyMapping[E,
   def >=  (value: A)  = single(FO.GREATER_THAN_OR_EQUAL, ">=", value)
   def <   (value: A)  = single(FO.LESS_THAN, "<", value)
   def <=  (value: A)  = single(FO.LESS_THAN_OR_EQUAL, "<=", value)
-  def in  (value: A*) = multi(FO.IN, "in", value:_*)
+  def in  (value: Traversable[A]) = multi(FO.IN, "in", value)
 }
 
 /* Special case filter to add sorts while taking advantage of a common interface. */
