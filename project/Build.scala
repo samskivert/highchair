@@ -7,7 +7,7 @@ object HighchairBuild extends Build {
     organization := "com.samskivert",
     name := "Highchair",
     description := "A set of modules for developing Google App Engine services/apps in Scala.",
-    version := "0.0.5",
+    version := "0.0.6-SNAPSHOT",
     scalaVersion := "2.10.0",
     crossScalaVersions := Seq("2.9.2"),
     scalacOptions += "-deprecation",
